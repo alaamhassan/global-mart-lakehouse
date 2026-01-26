@@ -1,0 +1,47 @@
+
+# CornJob (same idea of the smoke job but executing it repeatedly)
+# run it on a schedule
+# Simple comparison
+# Concept	      When it runs	    Purpose
+# Smoke         Job	Once	        “Did it come up?”
+# CronJob	      Repeated	        “Is it still healthy?”
+apiVersion: batch/v1 #Use the Kubernetes API group responsible for batch workloads.
+kind: Job #Run something once, and care about success or failure.”
+metadata:
+  name: storage-smoke-test # somke tests answer: did the system even starts correctly? -> it's called smoke because if a smoke comes out something is wrong (you don't test everthing)
+  namespace: storage #Namespace ensures:Same DNS context, Same network access, Same RBAC scope (Critical: tests must live where the system lives.)
+spec:
+  backoffLimit: 0 #Do NOT retry if the test fails. (FALIURE= something is broken)
+  template: # Pod template (Job create a Pod, watches its exit code, decide success/failure)
+    spec:
+      restartPolicy: Never #if the container exits -> stop
+      containers:
+        - name: tester
+          image: busybox:1.36 # why busybox? tiny, fast, has (sh, nslookup, nc), no bloat
+          command:
+            - sh # run a shell and execuate the following script
+            - -c
+            - |
+              echo "Testing DNS..." 
+              # DNS is "I have name - what IP address does it map to?" (e.g. google.com → 142.250.x.x)
+
+              nslookup mysql-hive-metastore-0.mysql-hive-metastore-headless.storage.svc.cluster.local 
+              # nslookup: name server lookup "Asking: Hey DNS server, do you know this name?" 
+              # (e.g success= name, IP address failuer= NXDOMIN)
+
+              nslookup minio-storage-0.minio-headless.storage.svc.cluster.local 
+              # Why this matter? (in kubernetes, services, pods(statefulSet), namespaces all rely on DNS 
+              # if DNS fails nothing can talk to anything, cluster is basically broken)
+
+              echo "Testing MySQL..."
+              #nc: netcat (think of it as very small networking probe)
+              # -z: check if the port is open (check if MySQL is listening, network path is open, service routing works)
+              # ask: is something listening on this port, and can I reach it over the network?
+              nc -z mysql-hive-metastore-0.mysql-hive-metastore-headless.storage.svc.cluster.local 3306 
+
+              echo "Testing MinIO..."
+              nc -z minio-storage-0.minio-headless.storage.svc.cluster.local 9000
+
+              echo "ALL TESTS PASSED" 
+              # shell scripts stop immediately if a command fails unless told otherwise,
+              # so in the case of that the previous code failed the script will exit immediatly with a failer

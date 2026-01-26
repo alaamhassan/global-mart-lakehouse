@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hive-site-config
+  namespace: storage
+data:
+  hive-site.xml.template: |
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+
+      <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>com.mysql.cj.jdbc.Driver</value>
+      </property>
+
+      <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:mysql://mysql-hive-metastore-0.mysql-hive-metastore-headless.storage.svc.cluster.local:3306/metastore?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true</value>
+        <description>JDBC URL for the Hive metastore database</description>
+      </property>
+
+      <property>
+        <name>fs.s3a.endpoint</name>
+        <value>http://minio-service.storage:9000</value>
+      </property>
+
+      <property>
+        <name>fs.s3a.path.style.access</name>
+        <value>true</value>
+      </property>
+
+      <property>
+        <name>fs.s3a.impl</name>
+        <value>org.apache.hadoop.fs.s3a.S3AFileSystem</value>
+      </property>
+
+      <property>
+        <name>fs.s3a.connection.ssl.enabled</name>
+        <value>false</value>
+      </property>
+
+      <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>${JDBC_USERNAME}</value>
+      </property>    
+
+      <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>${JDBC_PASSWORD}</value>
+      </property>
+
+      <!-- Hive metastore thrift service port -->
+      <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://hive-metastore:9083</value>
+      </property>
+
+      <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>s3a://globalmart-warehouse/</value>
+      </property>
+      <!-- Other production-relevant options could go here (timeouts, pooling, etc.) -->
+    </configuration>
+
+
+
+  #    hive-site.xml: |
+  #   <?xml version="1.0"?>
+  #   <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+  #   <configuration>
+  #     <!-- JDBC connection to the metastore MySQL database -->
+      # <property>
+      #   <name>javax.jdo.option.ConnectionURL</name>
+      #   <value>jdbc:mysql://mysql-hms-service.storage.svc.cluster.local:3306/metastore?useSSL=false&amp;serverTimezone=UTC</value>
+      #   <description>JDBC URL for the Hive metastore database</description>
+      # </property>
+
+      # <property>
+      #   <name>javax.jdo.option.ConnectionUserName</name>
+      #   <value>${JDBC_USERNAME}</value>
+      # </property>
+
+  # <!-- Hive metastore thrift service port -->
+  #     <property>
+  #       <name>hive.metastore.uris</name>
+  #       <value>thrift://0.0.0.0:9083</value>
+  #     </property>
+  #     <!-- Other production-relevant options could go here (timeouts, pooling, etc.) -->
+  #   </configuration>

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: storage
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secrets
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metastore
+
+---
+#depug pods, test jobs
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tools

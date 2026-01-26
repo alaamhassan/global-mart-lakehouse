@@ -1,0 +1,156 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hive-metastore
+  namespace: storage
+  labels:
+    app: hive-metastore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hive-metastore
+  template:
+    metadata:
+      labels:
+        app: hive-metastore
+    spec:
+      #Ensure files written to mounted volumes are group-owned so Hive can access them if needed
+      securityContext:
+        fsGroup: 1000
+      volumes:
+        - name: hive-config-template
+          configMap:
+            name: hive-site-config
+            items:
+              - key: hive-site.xml.template
+                path: hive-site.xml.template
+        - name: hive-config-work
+          emptyDir: {}
+
+      #initContainer: runs schema initialization using schematool (only runs once before main container)
+      initContainers:
+        - name: init-metastore-schema
+          image: globalmart/hive-metastore:4.0.0-mysql
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: JDBC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_USERNAME # SHOULD BE CHANGED !!!!!????????????????????????????????????????????????????????
+            - name: JDBC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
+            - name: HIVE_CONF_DIR
+              value: /work      
+          command:
+          - /bin/sh
+          - -c
+          - |
+            set -e
+            
+            echo "Exporting the environment variables"
+            export JDBC_USERNAME
+            export JDBC_PASSWORD
+
+            echo "Expanding hive-site.xml with envsubst ..."
+            envsubst < /config/hive-site.xml.template > /work/hive-site.xml
+
+            # echo "===== Generated hive-site.xml ====="
+            # cat /work/hive-site.xml
+            # echo "==================================="
+
+            echo "Initializing Hive Metastore schema..."
+            schematool -dbType mysql --initOrUpgradeSchema -verbose
+            
+            EXIT_CODE=$?
+            if [ $EXIT_CODE -ne 0 ]; then
+              echo "WARNING: schematool exited with code $EXIT_CODE"
+              echo "This my indicate schema already exists or a non-fatel issue"
+              echo "Check logs for details"
+            else 
+              echo "Hive Metastore schema initialized successfully"
+            fi
+
+          #Mount the hive-stie.xml (from the ConfigMap)
+          volumeMounts:
+            - name: hive-config-template
+              mountPath: /config
+            - name: hive-config-work
+              mountPath: /work
+
+      #Secrets and configmap
+      containers:
+        - name: hive-metastore
+          image: globalmart/hive-metastore:4.0.0-mysql
+          imagePullPolicy: IfNotPresent
+
+          #Expose the thrift metastore port inside the pod
+          ports:
+            - name: thrift
+              containerPort: 9083
+
+          #Environment variables loaded from the MySQL secret (username/password)
+          env:
+            - name: JDBC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_USERNAME
+            - name: JDBC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
+            - name: HIVE_CONF_DIR
+              value: /work  
+
+          #Mount the hive-stie.xml 
+          volumeMounts:
+            - name: hive-config-work
+              mountPath: /work/hive-site.xml
+              subPath: hive-site.xml
+
+          command:
+          - /bin/sh
+          - -c
+          - |
+            echo "Starting Hive Metastore..."
+            exec hive --service metastore 
+
+          # Readiness / liveness: check TCP port 9083 (metastore Thrift)
+          readinessProbe:
+            tcpSocket:
+              port: 9083
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 6
+
+          livenessProbe:
+            tcpSocket:
+              port: 9083
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+
+    # strategy:
+    #   type: RollingUpdate #this part was added but not applied  
+
+ 
+
+
+                
+
+
+            

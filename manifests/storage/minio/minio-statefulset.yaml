@@ -1,0 +1,136 @@
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio-storage
+  namespace: storage
+  # '''
+  # 1️⃣ Why labels section in the Deployment metadata exists?
+  # Labels are key-value pairs you attach to objects (pods, deployments, services).
+  # They are used for:
+  #   -Selectors → e.g., a Service needs to know which pods to send traffic to. It matches pods with app: minio.
+  #   -Organization → you can list all resources with kubectl get pods -l app=minio.
+  #   -Automation → CI/CD pipelines or monitoring tools often filter by labels.
+  #   Without labels, your Service wouldn’t know which pod to connect to.
+  # That’s why they appear everywhere (Deployment, Pod, Service) and must match.
+  
+  # The metadata.labels at the Deployment level is optional — it only labels the Deployment object itself, not the pods.
+  #   Why I kept both:
+  #     - metadata.labels (on Deployment) → for grouping/filtering Deployments.
+  #     - template.metadata.labels (on Pod template) → required for Services to select pods.
+  # '''
+  labels:
+    app: minio #Used for selectors and grouping resources.
+spec:
+  serviceName: minio-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      securityContext:
+        fsGroup: 1000 #minio group
+      containers:
+        - name: minio
+          image: minio/minio:latest
+          # args: ["server","/data"] -> we could also write it this way.
+          # '''
+          # 4️⃣ What is server mode?
+          #   MinIO has two modes:
+          #     - minio server /data → runs as an object storage server (like S3).
+          #     - minio gateway → runs as a gateway/proxy to another storage backend (like Azure, GCS, or S3).
+          #   Here, we run it in server mode with /data as the storage directory. That’s the normal production mode.
+          # '''
+          args: # Command-line arguments passed to the container’s entrypoint process [ex: like running "minio server /data"]
+            - server #Tells MinIO to run in server mode.
+            - /data  #/data is the directory where MinIO stores objects. (/data is the root storage path)
+            - --console-address     # Enable MinIO admin console
+            - ":9090"               # Console listens on port 9001
+          # envFrom:
+          #   - secretRef:
+          #       name: minio-secret  
+
+          env: #Passed to the container’s environment. -> this is hard coded way
+          - name: MINIO_ROOT_USER
+            valueFrom:
+              secretKeyRef:
+                name: minio-secret
+                key: MINIO_ROOT_USER
+          - name: MINIO_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: minio-secret
+                key: MINIO_ROOT_PASSWORD
+          - name: MINIO_CONSOLE_PORT   
+            value: "9090" 
+
+          # '''
+          # containerPort tells Kubernetes which ports inside the container the app is listening on.
+          # It does not expose them to the outside world by itself. It just makes them visible to other Kubernetes objects (like a Service).
+          #   - 9000 = S3 API (apps like Spark or Kafka connect here). -> minio by default listens on this port
+          #   - 9090 = MinIO Console (web UI). -> minio doens't bind console unless told explicitly
+          # Later, when you create a Service, it will map from a cluster or external port → to these container ports.
+          # '''  
+          ports:
+          - name: s3-api
+            containerPort: 9000 
+          - name: console
+            containerPort: 9090 
+          
+          volumeMounts:
+          - name: minio-storage 
+            mountPath: /data
+
+          # check if MinIO is ready to accept traffic
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: s3-api
+            initialDelaySeconds: 10 #Waits 10s after the pod starts (so MinIO has time to boot).
+            periodSeconds: 5 #Then checks every 5s.
+
+          # check if MinIO is still alive
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: s3-api
+            initialDelaySeconds: 20 # wait 20s before starting checks (longer because readiness might pass earlier, but full health might take time)
+            periodSeconds: 10 # then check every 10 seconds if it's alive.       
+  volumeClaimTemplates:
+    - metadata:
+        name: minio-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 50Gi
+
+
+
+
+
+# '''
+# 🔎 First: Why do we need both mountPath: /data and args: - /data?
+# Think of it like two layers:
+#   1. Kubernetes side (mountPath: /data)
+#       - Kubernetes attaches the PVC to the pod’s filesystem.
+#       - So inside the container, /data exists and points to a persistent disk.
+#       - Without this, /data would just be an empty folder inside the container, and all data would be lost if the pod restarts.
+#   2. Application side (args: - /data)
+#       - MinIO needs to be told where to store its objects.
+#       - The argument server /data tells MinIO: “put my storage here.”
+#       - If you don’t give this argument, MinIO won’t know to use /data at all (it would fail or pick a default).
+#   Together:
+#       - Kubernetes: “Here’s a persistent disk at /da
+#       - MinIO: “Okay, I will write objects to /data.”
+#   If you omit one:
+#       - Omit mountPath → MinIO writes to /data inside the container, but it’s not persistent (data lost on restart).
+#       - Omit args: - /data → PVC is mounted, but MinIO doesn’t use it (it ignores /data).
+#   So you need both.
+# '''            
+

@@ -1,0 +1,129 @@
+apiVersion: apps/v1 #kubernetes API version for StatefulSet, Latest stable and required for all modern clusters
+kind: StatefulSet
+# '''
+# metadata: name: mysql-hms
+# Human-readable name.
+# We follow the project naming convention:
+# <component>-<purpose>
+# '''
+metadata:
+  name: mysql-hive-metastore 
+# '''
+# namespace: storage
+# This places MySQL inside the namespace dedicated to storage-layer services, consistent with your directory structure:
+# manifests/storage/mysql/
+# '''  
+  namespace: storage
+  labels:
+    app: mysql-hms
+spec:
+# ''
+# Hive Metastore is a stateful singleton service.
+# Multiple replicas will corrupt metadata unless using Galera, which you don't need.
+# ''
+  serviceName: mysql-hive-metastore-headless # REQUIRED FOR StatefulSet
+  replicas: 1
+  # '''
+  # Defines which Pods belong to this Deployment.
+  # Selector must match Pod template labels
+  # '''
+  selector:
+    matchLabels:
+      app: mysql-hms
+  # '''
+  # Used by both
+  # -The Deployment selector
+  # -The Service selector
+  # Without these labels, traffic would not reach the pod.
+  # '''
+  template:
+    metadata:
+      labels:
+        app: mysql-hms
+    spec:
+      # '''
+      # MySQL inside the official Docker image uses group ID 999.
+      # Setting fsGroup ensures:
+      # -PVC directory permissions match MySQL requirements
+      # -Fixes “permission denied on /var/lib/mysql” errors
+      # '''
+      securityContext:
+        fsGroup: 999 #MySQL runs as this group ID internally
+        
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          
+          ports:
+          - containerPort: 3306 # Exposes MySQL inside the pod.
+          
+          env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_ROOT_PASSWORD
+
+          - name: MYSQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_DATABASE
+
+          # store all the values in the mysql file as invironment variables
+          # envFrom: 
+          # - secretRef:
+          #   name: mysql-secret
+
+          volumeMounts:
+          - name: mysql-data
+            # '''
+            # This is where InnoDB stores:
+            # - Data files
+            # - Logs
+            # - Metadata
+            # '''
+            mountPath: /var/lib/mysql
+
+          # '''
+          # Readiness means:
+          # - “Pod is ready to accept traffic”
+          # Hive Metastore should NOT connect until MySQL is ready.
+          # '''
+          readinessProbe:
+            tcpSocket:
+              port: 3306
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          
+          # '''
+          # Purpose:
+          # - If MySQL hangs, restart the pod
+          # This simulates real enterprise cluster behavior.
+          # '''
+          livenessProbe:
+            tcpSocket:
+              port: 3306
+            initialDelaySeconds: 30
+            periodSeconds: 4
+          
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources: 
+          requests:
+            storage: 10Gi
+
+
+
+

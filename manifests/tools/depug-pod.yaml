@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug
+  namespace: tools
+spec:
+  containers:
+  - name: depug
+    image: bitnami/kubectl:latest
+    command: ["sleep","3600"]
+
+    '''
+Explanation
+
+A debug pod is extremely useful:
+
+Inside the pod you can:
+    kubectl exec -it debug -n tools -- sh
+
+Then test:
+    curl mysql.storage.svc.cluster.local:3306
+    curl minio.storage.svc.cluster.local:9000
+
+This is real-world debugging.
+    
+    '''
