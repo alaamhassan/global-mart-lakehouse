@@ -7,7 +7,7 @@ kind: StatefulSet
 # <component>-<purpose>
 # '''
 metadata:
-  name: mysql-hive-metastore 
+  name: mysql-hms
 # '''
 # namespace: storage
 # This places MySQL inside the namespace dedicated to storage-layer services, consistent with your directory structure:
@@ -21,7 +21,7 @@ spec:
 # Hive Metastore is a stateful singleton service.
 # Multiple replicas will corrupt metadata unless using Galera, which you don't need.
 # ''
-  serviceName: mysql-hive-metastore-headless # REQUIRED FOR StatefulSet
+  serviceName: mysql-hms-headless # REQUIRED FOR StatefulSet
   replicas: 1
   # '''
   # Defines which Pods belong to this Deployment.
@@ -76,7 +76,7 @@ spec:
           #   name: mysql-secret
 
           volumeMounts:
-          - name: mysql-data
+          - name: mysql-storage
             # '''
             # This is where InnoDB stores:
             # - Data files
@@ -116,7 +116,7 @@ spec:
               cpu: "500m"
   volumeClaimTemplates:
     - metadata:
-        name: mysql-data
+        name: mysql-storage
       spec:
         accessModes: ["ReadWriteOnce"]
         storageClassName: local-path

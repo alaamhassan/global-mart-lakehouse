@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: minio-storage
+  name: minio
   namespace: storage
   # '''
   # 1️⃣ Why labels section in the Deployment metadata exists?
@@ -82,7 +82,7 @@ spec:
             containerPort: 9090 
           
           volumeMounts:
-          - name: minio-storage 
+          - name: minio-storage
             mountPath: /data
 
           # check if MinIO is ready to accept traffic
