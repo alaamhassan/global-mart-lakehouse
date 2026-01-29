@@ -22,9 +22,12 @@ spec:
             - sh # run a shell and execuate the following script
             - -c
             - |
-              echo "Testing DNS..." 
-              # DNS is "I have name - what IP address does it map to?" (e.g. google.com → 142.250.x.x)
 
+              # if any command fails -> exit immediatly with a non-zero code"
+              set -e
+              # DNS is "I have name - what IP address does it map to?" (e.g. google.com → 142.250.x.x)
+              echo "Testing DNS..." 
+            
               nslookup mysql-hive-metastore-0.mysql-hive-metastore-headless.storage.svc.cluster.local 
               # nslookup: name server lookup "Asking: Hey DNS server, do you know this name?" 
               # (e.g success= name, IP address failuer= NXDOMIN)
@@ -42,6 +45,8 @@ spec:
               echo "Testing MinIO..."
               nc -z minio-storage-0.minio-headless.storage.svc.cluster.local 9000
 
-              echo "ALL TESTS PASSED" 
+              echo "✅ ALL TESTS PASSED" 
               # shell scripts stop immediately if a command fails unless told otherwise,
               # so in the case of that the previous code failed the script will exit immediatly with a failer
+
+
