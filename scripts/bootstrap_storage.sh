@@ -1,3 +1,16 @@
+# ------------------------------------------------------------------------------
+# Script: bootstrap-storage.sh
+#
+# Purpose:
+#   - Apply core storage & metastore infrastructure
+#   - Ensure correct resource ordering
+#   - Run post-deployment smoke tests
+#
+# Usage:
+#   ./scripts/bootstrap-storage.sh
+#
+# Safe to re-run (idempotent)
+# ------------------------------------------------------------------------------
 
 
 # this is line is called a "shebang"
@@ -55,7 +68,7 @@ apply(){
 
 # -------------------------- HIVE METASTORE ---------------------------
 apply "Hive Metastore" \
-    "metastore/hive" \
+    "manifests/metastore/hive" \
     "configmaps/hive-configmap.yaml" \
     "services/hive-metastore-service.yaml" \
     "deployments/hive-metastore-deployment.yaml"
@@ -63,14 +76,14 @@ apply "Hive Metastore" \
 
 # ------------------------------ MINIO ---------------------------------
 apply "MINIO" \
-    "storage/minio" \
+    "manifests/storage/minio" \
     "minio-service.yaml" \
     "minio-statefulset.yaml"
 
 
 # ------------------------------- MYSQL --------------------------------
 apply "MYSQL" \
-    "storage/mysql" \
+    "manifests/storage/mysql" \
     "mysql-service.yaml" \
     "mysql-statefulset.yaml"
 
@@ -88,7 +101,7 @@ echo "=================================================================="
 kubectl -n storage delete job storage-smoke-test --ignore-not-found
 
 # Apply the smoke test job
-kubectl -n storage apply -f tools/storage-smoke-test.yaml
+kubectl -n storage apply -f manifests/tools/storage-smoke-test.yaml
 
 # Wait for the job to complete (success or failure)
 # runs ONLY if exit code == 0 (this why we invert the output so it run only in case of a failure (1(failure) when inverted became 0))

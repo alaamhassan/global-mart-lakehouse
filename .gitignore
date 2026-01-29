@@ -1,0 +1,14 @@
+# hide snsitive files (including secrets)
+manifests/**/.**
+
+# Env files
+.env
+.env.*
+
+# not used files
+**/_archive/
+
+#mc file
+mc
+
+
