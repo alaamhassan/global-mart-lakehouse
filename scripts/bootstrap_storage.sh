@@ -25,6 +25,11 @@
 # Together, these make the scripte SAFE for infrastructure work
 set -euo pipefail
 
+# sourcing the environment variables in the ".storage.env"
+# so we don't hardcode the names of the resources
+source scripts/env/.storage.env
+
+
 # A variable holding the Kubernetes namespace
 # Using a variable avoids hardcoding "storage" everywhere
 # Together, these make the script SAFE for infrastructure work
@@ -65,24 +70,34 @@ apply(){
 
     done  
 }
+# -------------------------- Applying Configmap ---------------------------
+apply "Applying Global Mart Env" \
+    "manifests/base" \
+    "storage-env.yaml" 
+
+# -------------------------- Applying Secrets ---------------------------
+apply "Applying MinIO & MySQL Secrets" \
+    "manifests/secrets" \
+    ".minio-secret.yaml" \
+    ".mysql-secret.yaml" 
 
 # -------------------------- HIVE METASTORE ---------------------------
-apply "Hive Metastore" \
+apply "Applying Hive Metastore" \
     "manifests/metastore/hive" \
-    "configmaps/hive-configmap.yaml" \
-    "services/hive-metastore-service.yaml" \
-    "deployments/hive-metastore-deployment.yaml"
+    "hive-configmap.yaml" \
+    "hive-metastore-service.yaml" \
+    "hive-metastore-deployment.yaml"
 
 
 # ------------------------------ MINIO ---------------------------------
-apply "MINIO" \
+apply "Applying MINIO" \
     "manifests/storage/minio" \
     "minio-service.yaml" \
     "minio-statefulset.yaml"
 
 
 # ------------------------------- MYSQL --------------------------------
-apply "MYSQL" \
+apply "Applying MYSQL" \
     "manifests/storage/mysql" \
     "mysql-service.yaml" \
     "mysql-statefulset.yaml"
@@ -92,6 +107,22 @@ echo "======================================================"
 echo " ✅ All resources applied successfully"
 echo "======================================================"
 
+
+# -------------------------- Waiting for storage components to be READY" ---------------------------
+echo "======================================================"
+echo "⏳ Waiting for storage components to be READY"
+echo "======================================================"
+kubectl -n storage wait \
+    --for=condition=ready \
+    pod\
+    -l app="$MYSQL_APP"\
+    --timeout=180s
+
+kubectl -n storage wait \
+    --for=condition=ready \
+    pod\
+    -l app="$MINIO_APP"\
+    --timeout=180s    
 # -------------------------------RUNNING SMOKE TESTS----------------------
 echo "=================================================================="
 echo " Running Storage Smoke Tests"
@@ -106,9 +137,9 @@ kubectl -n storage apply -f manifests/tools/storage-smoke-test.yaml
 # Wait for the job to complete (success or failure)
 # runs ONLY if exit code == 0 (this why we invert the output so it run only in case of a failure (1(failure) when inverted became 0))
 if ! kubectl -n storage wait \
---for=condition=complete \
-job/storage-smoke-test \
---timeout=120s; then
+    --for=condition=complete \
+    job/storage-smoke-test \
+    --timeout=120s; then
 
 echo "❌ Smoke tests FAILED"
 echo "Fetching job logs..."
