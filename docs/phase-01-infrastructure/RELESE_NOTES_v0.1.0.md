@@ -6,7 +6,7 @@ Documents the exact scope, changes, and outcomes included in release v0.1.0.
 
 ## Phase 1: Infrastructure Foundation
 
-**Release date:** 2026-02-05
+**Release date:** 2026-02-07
 
 ---
 
