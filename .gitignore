@@ -2,8 +2,8 @@
 manifests/**/.**
 
 # Env files
-.env
-.env.*
+.**env
+.**env.*
 
 # not used files
 **/_archive/
