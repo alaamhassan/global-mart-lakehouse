@@ -1,13 +1,19 @@
 # Phase 1 – Infrastructure Foundation
 
+## File Purpose
+
+Describes what Phase 1 delivers and how the infrastructure can be validated.
+
+
 ## Overview
 
 Phase 1 establishes the foundational Kubernetes infrastructure for the **Global Mart Lakehouse** project.
 
 The focus of this phase is **infrastructure correctness, persistence, and stability**, not data processing or analytics.
 
-📘 For detailed goals, scope boundaries, and learning objectives, see:
-**[DESIGN.md](./DESIGN.md)**
+📘 For detailed goals, scope boundaries, and architectural rationale, see:
+- **[Design Document](./DESIGN.md)**
+- **[Release Notes v0.1.0](./RELEASE_NOTES_v0.1.0.md)**
 
 ---
 

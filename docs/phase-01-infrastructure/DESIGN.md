@@ -1,18 +1,22 @@
 # Phase 1 – Infrastructure Design
 
+## File Purpose
+
+Explains the architectural decisions and rationale behind Phase 1.
+
 ## 1. Purpose
 
 Phase 1 builds the **foundational infrastructure layer** for the Global Mart Lakehouse.
 
-This phase ensures that all future data workloads run on a **stable, persistent, and well‑understood platform**.
+This phase ensures that all future data workloads run on a **stable, persistent, and well-understood Kubernetes platform**.
 
 ---
 
-## 2. High‑Level Goals
+## 2. High-Level Goals
 
 * Run entirely on Kubernetes
 * Persist data beyond pod lifecycles
-* Use production‑grade Kubernetes primitives
+* Use production-grade Kubernetes primitives
 * Follow clean naming and folder conventions
 * Maximize learning without unnecessary complexity
 
@@ -22,19 +26,19 @@ This phase ensures that all future data workloads run on a **stable, persistent,
 
 ### Included
 
-* Kubernetes cluster deployment
+* Kubernetes namespace and base environment
 * MinIO (object storage)
 * MySQL (Hive Metastore backend)
 * Hive Metastore service
 * Persistent storage (PVCs)
-* Health probes and smoke tests
+* Health probes and runtime smoke tests
 
 ### Explicitly Excluded
 
 * Compute engines (Spark, Flink, Trino)
 * Streaming systems (Kafka)
 * Orchestration (Airflow)
-* Helm and Kustomize (planned later)
+* Helm and Kustomize (planned later phases)
 * Data ingestion and analytics
 
 ---
@@ -43,27 +47,27 @@ This phase ensures that all future data workloads run on a **stable, persistent,
 
 ### Storage Layer
 
-* MinIO as S3‑compatible object storage
-* StatefulSet ensures stable identity
-* PVCs guarantee data persistence
+* MinIO provides S3-compatible object storage
+* Deployed as a StatefulSet for stable identity
+* PersistentVolumeClaims ensure durability
 
 ### Metadata Layer
 
 * MySQL stores Hive Metastore metadata
-* StatefulSet + PVC ensures durability
+* StatefulSet + PVC ensure metadata persistence
 
 ### Metadata Service
 
 * Hive Metastore exposes table definitions
-* Enables future engines to share metadata
+* Acts as a shared metadata layer for future compute engines
 
 ---
 
 ## 5. Reliability & Health
 
-* **Readiness Probes** control traffic flow
-* **Liveness Probes** detect broken containers
-* **Smoke Test Jobs** validate cluster wiring
+* **Readiness probes** control traffic flow
+* **Liveness probes** detect broken containers
+* **Smoke test Jobs** validate DNS and service connectivity
 
 ---
 
@@ -72,25 +76,32 @@ This phase ensures that all future data workloads run on a **stable, persistent,
 ### Kubernetes
 
 * StatefulSet vs Deployment
-* Headless Services and DNS
+* Headless Services and stable DNS
 * PersistentVolumeClaims
-* Jobs for one‑time validation
+* Jobs for one-time validation
 
 ### Storage & Persistence
 
 * Pod lifecycle vs data lifecycle
-* Why persistence must be tested
+* Why persistence must be explicitly tested
 
-### Linux & Containers
+### Containers & Docker
 
-* Container startup behavior
-* Shell scripting for automation
+* Building a custom Docker image (Hive Metastore)
+* Container startup behavior and entrypoints
+
+
+### Linux & Automation
+
+* Shell scripting for infrastructure automation
+* Safe scripting practices (`set -euo pipefail`)
 
 ### Enterprise Practices
 
 * Infrastructure as Code
 * Clean repository structure
-* Documentation as a first‑class artifact
+* Documentation as a first-class artifact
+
 
 ---
 
@@ -100,10 +111,10 @@ Phase 1 is complete when:
 
 * All components deploy cleanly
 * Data survives pod restarts
-* DNS works reliably
+* DNS resolves reliably
 * Smoke tests pass
 * Secrets are not committed
-* Documentation explains design choices
+* Documentation explains design decisions
 
 ---
 
@@ -119,4 +130,4 @@ Skipping this phase leads to fragile systems and shallow understanding.
 
 ## 9. Next Phase
 
-Phase 2 will focus on **manual and automated validation of data persistence**, followed by compute layer introduction.
+**Phase 2** will focus on **explicit persistence validation and object storage usage**, followed by the introduction of compute engines.
