@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: storage-env
+  namespace: storage
+data:
+
+  CLUSTER_DOMAIN: "svc.cluster.local"
+
+  MYSQL_APP: mysql-hms
+  MYSQL_POD: mysql-hms-0
+  MYSQL_SERVICE: mysql-hms-headless
+  MYSQL_PORT: "3306"
+
+  
+  MINIO_APP: minio
+  MINIO_POD: minio-0
+  MINIO_SERVICE: minio-headless
+  MINIO_PORT: "9000"
+

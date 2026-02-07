@@ -14,9 +14,10 @@ data:
         <value>com.mysql.cj.jdbc.Driver</value>
       </property>
 
+
       <property>
         <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:mysql://mysql-hive-metastore-0.mysql-hive-metastore-headless.storage.svc.cluster.local:3306/metastore?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true</value>
+        <value>jdbc:mysql://mysql-hms-0.mysql-hms-headless.storage.svc.cluster.local:3306/metastore?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true</value>
         <description>JDBC URL for the Hive metastore database</description>
       </property>
 
