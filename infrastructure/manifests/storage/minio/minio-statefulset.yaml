@@ -84,6 +84,8 @@ spec:
           volumeMounts:
           - name: minio-storage
             mountPath: /data
+          - name: minio-certficates
+            mountPath: root/.minio/certs
 
           # check if MinIO is ready to accept traffic
           readinessProbe:
@@ -109,6 +111,14 @@ spec:
         resources:
           requests:
             storage: 50Gi
+    - metadata:
+        name: minio-certifcates
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 500M
 
 
 

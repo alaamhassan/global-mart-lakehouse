@@ -1,5 +1,5 @@
-# hide snsitive files (including secrets)
-manifests/**/.**
+# hide snsitive files
+**/manifests/**/.*
 
 # Env files
 .**env
@@ -12,3 +12,8 @@ manifests/**/.**
 mc
 
 
+
+# TLS material
+*.key
+*.crt
+openssl.cnf

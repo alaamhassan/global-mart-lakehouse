@@ -7,7 +7,7 @@
 #   - Run post-deployment smoke tests
 #
 # Usage:
-#   ./scripts/bootstrap-storage.sh
+#   bash infrastructure/scripts/storage/bootstrap_storage.sh
 #
 # Safe to re-run (idempotent)
 # ------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ set -euo pipefail
 
 # sourcing the environment variables in the ".storage.env"
 # so we don't hardcode the names of the resources
-source scripts/env/.storage.env
+source infrastructure/scripts/storage/env/.storage.env
 
 
 # A variable holding the Kubernetes namespace
@@ -72,18 +72,18 @@ apply(){
 }
 # -------------------------- Applying Configmap ---------------------------
 apply "Applying Global Mart Env" \
-    "manifests/base" \
+    "infrastructure/manifests/base" \
     "storage-env.yaml" 
 
 # -------------------------- Applying Secrets ---------------------------
 apply "Applying MinIO & MySQL Secrets" \
-    "manifests/secrets" \
+    "infrastructure/manifests/secrets" \
     ".minio-secret.yaml" \
     ".mysql-secret.yaml" 
 
 # -------------------------- HIVE METASTORE ---------------------------
 apply "Applying Hive Metastore" \
-    "manifests/metastore/hive" \
+    "infrastructure/manifests/metastore/hive" \
     "hive-configmap.yaml" \
     "hive-metastore-service.yaml" \
     "hive-metastore-deployment.yaml"
@@ -91,14 +91,14 @@ apply "Applying Hive Metastore" \
 
 # ------------------------------ MINIO ---------------------------------
 apply "Applying MINIO" \
-    "manifests/storage/minio" \
+    "infrastructure/manifests/storage/minio" \
     "minio-service.yaml" \
     "minio-statefulset.yaml"
 
 
 # ------------------------------- MYSQL --------------------------------
 apply "Applying MYSQL" \
-    "manifests/storage/mysql" \
+    "infrastructure/manifests/storage/mysql" \
     "mysql-service.yaml" \
     "mysql-statefulset.yaml"
 
@@ -132,7 +132,7 @@ echo "=================================================================="
 kubectl -n storage delete job storage-smoke-test --ignore-not-found
 
 # Apply the smoke test job
-kubectl -n storage apply -f manifests/tools/storage-smoke-test.yaml
+kubectl -n storage apply -f infrastructure/manifests/tools/storage-smoke-test.yaml
 
 # Wait for the job to complete (success or failure)
 # runs ONLY if exit code == 0 (this why we invert the output so it run only in case of a failure (1(failure) when inverted became 0))

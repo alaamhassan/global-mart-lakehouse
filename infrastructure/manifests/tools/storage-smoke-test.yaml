@@ -23,13 +23,15 @@ spec:
             - -c
             - |
 
-              # if any command fails -> exit immediatly with a non-zero code"
-              set -e
+              # -e: if any command fails -> exit immediatly with a non-zero code"
+              # -u: treat unbound variable as an error
+              # -o pipefail: fails if any command in the pipe failed, not just the last one.
+              set -euo pipefail
               CLUSTER_DOMAIN="svc.cluster.local"
 
               #FQDN: Fully Qualified DNS Name: the complate, unambiguous name of a resource in DNS.
               echo "MYSQL_FDQN:${MYSQL_POD}.${MYSQL_SERVICE}.${NAMESPACE}.${CLUSTER_DOMAIN}"
-
+              echo "MYSQL_POD:${MYSQL_POD}"
               MYSQL_FQDN="${MYSQL_POD}.${MYSQL_SERVICE}.${NAMESPACE}.${CLUSTER_DOMAIN}"
               MINIO_FQDN="${MINIO_POD}.${MINIO_SERVICE}.${NAMESPACE}.${CLUSTER_DOMAIN}"
 

@@ -37,7 +37,7 @@ delete(){
 
     # print clear sections headers for readability in logs/CI output
     echo "======================================================"
-    echo " Updating $title"
+    echo " DELETING $title"
     echo "======================================================"
 
     # "$@" means: all remaining arguments (each preserved as a separate value)
@@ -55,43 +55,43 @@ delete(){
 
 
 # -------------------------- DELETING MinIO & MySQL Secrets ---------------------------
-delete "DELETING MinIO & MySQL Secrets" \
+delete "MinIO & MySQL Secrets" \
     "secret" \
     "minio-secret" \
     "mysql-secret" 
 
 # -------------------------- HIVE METASTORE & MinIO & MySQL SERVICES---------------------------
-delete "DELETING HIVE METASTORE & MinIO & MySQL SERVICES" \
+delete "HIVE METASTORE & MinIO & MySQL SERVICES" \
     "service" \
     "hive-metastore-service" \
     "mysql-hms-headless" \
     "minio-headless"
 
 # -------------------------- DELETING HIVE METASTORE CONFIMAP---------------------------
-delete "DELETING Hive Metastore Configmap"  \
+delete "Hive Metastore Configmap"  \
     "configmap" \
     "hive-site-config" 
 
 
 # -------------------------- DELETING HIVE METASTORE DEPLOYMENT---------------------------
-delete "DELETING Hive Metastore Deployment" \
+delete "Hive Metastore Deployment" \
     "deploy" \
     "hive-metastore"
 
 # -------------------------- DELETING MinIO & MySQL STATEFULSET---------------------------
-delete "DELETING MinIO & MySQL StatefulSets"  \
+delete "MinIO & MySQL StatefulSets"  \
     "statefulset" \
     "mysql-hms" \
     "minio"
 
 # -------------------------- DELETING MinIO & MySQL STATEFULSET---------------------------
-delete "DELETING MinIO & MySQL PVCs"  \
+delete "MinIO & MySQL PVCs"  \
     "pvc" \
     "minio-storage-minio-0" \
     "mysql-storage-mysql-hms-0"
 
 # -------------------------- Deleting Global Mart Env Configmap ---------------------------
-delete "Applying Global Mart Env" \
+delete "Global Mart Env" \
     "configmap" \
     "storage-env" 
 
