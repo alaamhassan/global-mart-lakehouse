@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: datasets-env
+  namespace: datasets
+data:
+
+  CLUSTER_DOMAIN: "svc.cluster.local"
+
+  MSSQL_APP: datasets-mssql
+  MSSQL_POD: datasets-mssql-0
+  MSSQL_SERVICE: mssql-service-headless
+  MSSQL_PORT: "1433"
+
+
+

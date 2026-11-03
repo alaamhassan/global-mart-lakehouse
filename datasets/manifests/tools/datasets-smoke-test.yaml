@@ -1,0 +1,65 @@
+
+# CornJob (same idea of the smoke job but executing it repeatedly)
+# run it on a schedule
+# Simple comparison
+# Concept	      When it runs	    Purpose
+# Smoke         Job	Once	        “Did it come up?”
+# CronJob	      Repeated	        “Is it still healthy?”
+apiVersion: batch/v1 #Use the Kubernetes API group responsible for batch workloads.
+kind: Job #Run something once, and care about success or failure.”
+metadata:
+  name: datasets-smoke-test # somke tests answer: did the system even starts correctly? -> it's called smoke because if a smoke comes out something is wrong (you don't test everthing)
+  namespace: datasets #Namespace ensures:Same DNS context, Same network access, Same RBAC scope (Critical: tests must live where the system lives.)
+spec:
+  backoffLimit: 0 #Do NOT retry if the test fails. (FALIURE= something is broken)
+  template: # Pod template (Job create a Pod, watches its exit code, decide success/failure)
+    spec:
+      restartPolicy: Never #if the container exits -> stop
+      ttlSecondsAfterFinished: 3600
+      containers:
+        - name: tester
+          image: busybox:1.36 # why busybox? tiny, fast, has (sh, nslookup, nc), no bloat
+          command:
+            - sh # run a shell and execuate the following script
+            - -c
+            - |
+
+              # -e: if any command fails -> exit immediatly with a non-zero code"
+              # -u: treat unbound variable as an error
+              # -o pipefail: fails if any command in the pipe failed, not just the last one.
+              set -euo pipefail
+              CLUSTER_DOMAIN="svc.cluster.local"
+
+
+
+              MSSQL_FDQN="${MSSQL_POD}.${MSSQL_SERVICE}.${NAMESPACE}.${CLUSTER_DOMAIN}"
+
+              #FQDN: Fully Qualified DNS Name: the complate, unambiguous name of a resource in DNS.
+              echo "MSSQL_FDQN"
+              
+              # DNS is "I have name - what IP address does it map to?" (e.g. google.com → 142.250.x.x)
+              echo "Testing DNS..." 
+          
+              nslookup "$MSSQL_FDQN" 
+              # nslookup: name server lookup "Asking: Hey DNS server, do you know this name?" 
+              # (e.g success= name, IP address failuer= NXDOMIN)
+
+              echo "Testing MSSQL_BRAZILIAN..."
+              #nc: netcat (think of it as very small networking probe)
+              # -z: check if the port is open (check if MySQL is listening, network path is open, service routing works)
+              # ask: is something listening on this port, and can I reach it over the network?
+              nc -z "$MSSQL_FDQN" "$MSSQL_PORT" 
+
+              echo "✅ ALL TESTS PASSED" 
+              # shell scripts stop immediately if a command fails unless told otherwise,
+              # so in the case of that the previous code failed the script will exit immediatly with a failer
+          env:
+            # kubernetes injects the Pod's own namespace into the container as an environment variable.
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          envFrom:
+            - configMapRef:
+               name: datasets-env
+

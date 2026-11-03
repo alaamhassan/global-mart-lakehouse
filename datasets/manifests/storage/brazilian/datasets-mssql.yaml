@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: datasets-mssql
+  namespace: datasets
+  labels:
+    app: datasets-mssql
+spec:
+  serviceName: mssql-service-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: datasets-mssql
+  template:
+    metadata:
+      labels:
+        app: datasets-mssql
+    spec:
+      securityContext: 
+        fsGroup: 10001
+
+      containers:
+        - name: brazilian-mssql
+          image: mcr.microsoft.com/mssql/server:2022-latest  
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 1433
+          env:
+          - name: MSSQL_PID
+            value: "Developer"
+          - name: ACCEPT_EULA
+            value: "Y"
+          - name: MSSQL_SA_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: brazilian-mssql-secret
+                key: MSSQL_SA_PASSWORD
+          volumeMounts: 
+          - name: brazilian-mssqldb
+            mountPath: /var/opt/mssql
+          readinessProbe:
+            tcpSocket:
+              port: 1433
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 1433
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "2000m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+  volumeClaimTemplates:
+    - metadata: 
+        name: brazilian-mssqldb
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 2Gi
+

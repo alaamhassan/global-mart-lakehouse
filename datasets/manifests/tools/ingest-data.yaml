@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ingest-data-mssql-minio-job
+  namespace: datasets
+spec:
+  template: 
+    spec:
+      restartPolicy: Never
+      ttlSecondsAfterFinished: 3600
+      containers:
+        - name: data-ingestor
+          image: mcr.microsoft.com/mssql-tools
+          env:
+          - name: MSSQL_SA_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: brazilian-mssql-secret
+                key: MSSQL_SA_PASSWORD
+          command: ["/bin/sh","-c"]
+          args: 
+            - /opt/mssql-tools/bin/sqlcmd -S mssql-service-headless.datasets.svc.cluster.local -U SA -P $MSSQL_SA_PASSWORD -i /scripts/ingest-data.sql
+          volumeMounts:
+            - name: script-volume
+              mountPath: /scripts
+      volumes:
+      - name: script-volume
+        configMap:
+          name: ingest-data-config
+        
