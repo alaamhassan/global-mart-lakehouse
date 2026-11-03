@@ -24,12 +24,14 @@
 |---|---|
 | **Phase 1: Infrastructure foundation** (this repo, `v0.1.0`) | ✅ Delivered |
 | Persistence validation and object storage usage (Phase 2) | 🔜 Next |
-| Data ingestion, Bronze/Silver/Gold layers | 📋 Planned |
+| Source database: Brazilian e-commerce on SQL Server, deployed on Kubernetes | 🔄 In progress (manifests, bootstrap and smoke test written) |
+| MSSQL → MinIO Parquet export (Bronze layer) | 🔄 Drafted, not yet working end to end |
+| Silver and Gold layers | 📋 Planned |
 | Compute engines (Spark / Trino / Flink) | 📋 Planned |
 | Apache Iceberg table format | 📋 Planned |
 | Helm packaging of the platform | 📋 Planned |
 
-> **Honest scope note:** this repository currently contains the **platform layer only**. No datasets are ingested and no compute engine is deployed yet. The business discovery work (stakeholders, BEAM\* events, conceptual model) is done and is summarised below, and it drives what gets built next.
+> **Honest scope note:** the **platform layer** (Phase 1) is complete. No data has been successfully ingested into the lake yet and no compute engine is deployed. A SQL Server source database and an MSSQL → MinIO export pipeline are in progress (see below). The business discovery work (stakeholders, BEAM\* events, conceptual model) is done and is summarised below, and it drives what gets built next.
 
 ## Why This Project Exists
 
@@ -47,6 +49,7 @@ This repository builds that platform from the ground up, **foundation first**: r
 | **Custom Hive image** | `docker/hive-metastore/Dockerfile` | Extends `apache/hive:4.0.0` with the MySQL JDBC driver (8.3.0) and `envsubst` |
 | **Configuration** | ConfigMaps | `storage-env` (shared names and ports) and `hive-site-config` (templated `hive-site.xml`) |
 | **Secrets** | Kubernetes Secrets | MySQL and MinIO credentials, kept out of Git |
+| **SQL Server source** (in progress) | StatefulSet + headless Service | SQL Server 2022 (Developer edition) in the `datasets` namespace, 2Gi PVC, 2 CPU / 2Gi memory, SA password from a Secret |
 | **Smoke test** | Job | Verifies DNS and TCP reachability of MySQL and MinIO |
 | **Automation** | Bash scripts | Idempotent bootstrap with readiness waits and smoke test, plus a teardown script |
 
@@ -92,6 +95,26 @@ sequenceDiagram
     K->>H: Start metastore (Thrift :9083)
     K->>H: Readiness and liveness checks on port 9083
 ```
+
+## In Progress: Source Database and Bronze Ingestion
+
+The first source is the **Brazilian e-commerce** dataset, hosted in a SQL Server instance on the same cluster, from which tables are exported to MinIO as **Parquet** (the Bronze/raw layer).
+
+```mermaid
+flowchart LR
+    A[(SQL Server 2022<br/>BrazilianECommerce<br/>StatefulSet, namespace: datasets)] -->|"ingestion Job<br/>sqlcmd runs export SQL"| B[External tables<br/>PolyBase, Parquet format]
+    B -->|S3 API| C[(MinIO<br/>Bronze / raw layer)]
+    style B stroke-dasharray: 5 5
+    style C stroke-dasharray: 5 5
+```
+
+| Piece | State |
+|---|---|
+| SQL Server StatefulSet, Service, namespace, env ConfigMap | Written; `bootstrap-datasets.sh` applies them and runs a smoke test |
+| Export SQL (create external data source, Parquet file format, one external table per source table) | Drafted in `datasets/scripts/SQL/` |
+| Ingestion Job (`sqlcmd` runs the export SQL inside the cluster) | Drafted in `datasets/manifests/tools/` |
+| Loading the dataset into SQL Server | Not yet automated or documented |
+| End-to-end run (Parquet files visible in MinIO) | **Not yet validated** |
 
 ## Planned: Table Format and Packaging
 
@@ -163,6 +186,9 @@ flowchart TB
 
 ```text
 global-mart-lakehouse/
+├── datasets/                            # Source datasets (in progress)
+│   ├── manifests/                       # SQL Server StatefulSet, Service, namespace, ingestion Job
+│   └── scripts/                         # Bootstrap/teardown, export SQL, cert helper
 ├── docker/
 │   └── hive-metastore/Dockerfile        # Hive 4.0.0 + MySQL JDBC driver
 ├── docs/
@@ -278,6 +304,7 @@ Being upfront about what is intentionally unfinished:
 - **Unpinned MinIO image:** `minio/minio:latest` should be pinned to a specific version.
 - **Credentials:** the Hive Metastore currently connects to MySQL with the root account. A dedicated least-privilege database user is planned.
 - **Ingress is a draft:** `infrastructure/manifests/networking/ingress.yaml` is not applied by the bootstrap script. MinIO is reached through port-forwarding for now.
+- **Ingestion is unfinished:** the MSSQL → MinIO export is drafted but not validated, and the dataset load step is not automated yet.
 - **No end-to-end data test yet:** persistence validation and writing real objects to MinIO are the focus of Phase 2.
 
 ## Roadmap
@@ -286,7 +313,7 @@ Being upfront about what is intentionally unfinished:
 - [x] **Phase 1:** Kubernetes infrastructure foundation (`v0.1.0`)
 - [ ] **Phase 2:** Persistence validation and object storage usage
 - [ ] **Helm:** package MinIO, MySQL, and Hive Metastore as Helm charts with per-environment values
-- [ ] Batch ingestion of a first dataset into a Bronze (raw) layer as Parquet
+- [ ] **In progress:** batch ingestion of the Brazilian e-commerce dataset into a Bronze (raw) layer as Parquet
 - [ ] Compute engines (Spark, Trino) using the shared Hive Metastore
 - [ ] **Apache Iceberg** tables for the Silver/Gold layers, using Hive Metastore as the catalog
 - [ ] Silver layer: cleaning, standardisation, data quality checks
