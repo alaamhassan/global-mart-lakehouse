@@ -35,9 +35,15 @@
 
 ## Why This Project Exists
 
-**Global Mart** is a fictional retail company selling bags, shoes, and accessories in Brazil and Bangladesh. Its CEO wants to know whether the business is heading in the right direction, which requires bringing sales, inventory, customer, marketing, finance, and shipping data into one analytics-ready platform, without depending on a cloud vendor.
+**Global Mart** is a fictional retail company based in Brazil that is going global. To grow faster, it has acquired marts in other countries, starting with Bangladesh. Each mart was built independently, so each runs its own systems, formats, and definitions: SQL Server for Brazil, MySQL for Bangladesh, and supporting data in CSV exports.
 
-This repository builds that platform from the ground up, **foundation first**: reliable storage, a metadata catalog, and automation, before any data or compute is added.
+The result is that leadership cannot see the whole business in one place. There is no common way to compare countries or to calculate company-wide figures, and cross-country reports have to be assembled by hand.
+
+**Global Mart** needs one trusted data platform that brings the data of all its marts together so the company can operate and be analyzed as a single business. This repository builds that platform without depending on any cloud vendor.
+
+It is built **foundation first**: a business-driven design (BEAM* events and a conceptual model) comes before the technology, and the platform starts with reliable storage, a metadata catalog, and automation, before any data or compute is added.
+
+**foundation first**: leadership can answer cross-country questions, such as how each country is performing and how products, customers, and channels compare, from one consistent source instead of separate systems.
 
 ## What Is Built Today
 
