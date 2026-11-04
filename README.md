@@ -320,10 +320,69 @@ Being upfront about what is intentionally unfinished:
 - [ ] Gold layer: dimensional models from the BEAM\* events
 - [ ] Orchestration, BI dashboards, and governance
 
+## Documentation Highlights
+
+Before writing any infrastructure code, the project was documented the way a real data team would: discovery first, architecture second, implementation third. Each stage has its own document in [`docs/`](docs/).
+
+```mermaid
+flowchart LR
+    A["Sprint 0<br/>Discovery"] --> B["BEAM* workshops<br/>6 business events"]
+    B --> C["Sprint 1<br/>Architecture and tooling decisions"]
+    C --> D["Phase 1<br/>Infrastructure (v0.1.0)"]
+    D --> E["Next<br/>Ingestion, Silver/Gold"]
+    style E stroke-dasharray: 5 5
+```
+
+<table>
+  <tr>
+    <td align="center"><a href="docs/phase-00-discovery/BEAM_Workshop_Canvas.pdf"><img src="docs/images/previews/beam-canvas-1.png" width="420" alt="BEAM canvas for Sales Transactions"></a><br><sub>BEAM* canvas: Sales Transactions</sub></td>
+    <td align="center"><a href="docs/phase-00-discovery/Sprint0_Documentation.pdf"><img src="docs/images/previews/conceptual-model-12.png" width="420" alt="Conceptual model with conformed dimensions"></a><br><sub>Conceptual model with conformed dimensions</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/phase-00-discovery/Sprint0_Documentation.pdf"><img src="docs/images/previews/stakeholders-03.png" width="420" alt="Stakeholder register"></a><br><sub>Stakeholder register</sub></td>
+    <td align="center"><a href="docs/phase-01-infrastructure/Sprint1_Documentation.pdf"><img src="docs/images/previews/architecture-layers-4.png" width="420" alt="Sprint 1 architecture layers"></a><br><sub>Sprint 1: architecture layers</sub></td>
+  </tr>
+</table>
+
+<sub>Click any preview to open the full PDF.</sub>
+
+### Sprint 0: Discovery
+
+- **Stakeholder register:** six stakeholders (sponsor, product owner, data analyst, marketing manager, customer, compliance officer) with influence/interest ratings and an engagement strategy for each.
+- **Business events:** six events documented with the 7Ws (who, what, when, where, why, how, how many), event type, and fact granularity.
+- **Conceptual model:** the six event fact tables connected through shared (conformed) dimensions: Date, Customer, Product, Location, Channel, Employee, and Salesperson.
+- **Data source assessment:** nine datasets evaluated across the same five criteria:
+
+| Criterion | What was assessed |
+|---|---|
+| Ingestion | Source type (SQL Server, MySQL, CSV, JSON, Python), frequency, batch vs near real-time |
+| Data quality | Required quality level and the transformations each source needs |
+| Storage | Initial volume and yearly growth (for example Brazilian e-commerce at roughly 333 MB, growing about 20% a year) |
+| Processing | Batch vs real-time, and performance expectations |
+| Reporting and security | User roles, access levels, and security requirements per source |
+
+### BEAM\* workshop outputs
+
+- **Six BEAM\* canvases**, one per business event, filled in by the standard canvas sections (When, How, Who, How Many, Where, What, Why).
+- **7Ws documentation sheets** with an initial data example for each event and its planned future use (for example predictive sales analysis, market basket analysis, customer sentiment analysis).
+- **Example data tables** in a spreadsheet, with each measure classified as fully additive, semi-additive, or non-additive, which feeds straight into later fact-table design.
+
+### Sprint 1: Architecture and tooling
+
+- **Target architecture:** Source → Ingestion → Raw (Bronze) → Clean (Silver) → Curated (Gold), with an explicit status for each layer.
+- **Architecture principles:** separation of concerns, schema-on-read, incremental evolution, and reproducibility.
+- **Tooling decisions with trade-offs:** MinIO over a relational database and HDFS, Parquet as the file format, MySQL as the metastore backend, and Iceberg/Delta deliberately deferred.
+- **Scope control:** clear in-scope and out-of-scope lists, a definition of done, and a risks, trade-offs, and deferred-items table.
+
 ## Documentation
 
 | Document | Purpose |
 |---|---|
+| [Sprint 0: discovery](docs/phase-00-discovery/Sprint0_Documentation.pdf) | Stakeholders, business events, conceptual model, data source assessment |
+| [BEAM* canvases](docs/phase-00-discovery/BEAM_Workshop_Canvas.pdf) | One canvas per business event |
+| [Business events (7Ws)](docs/phase-00-discovery/Business_Events_Documentation.pdf) | 7Ws documentation for each event |
+| [Event example tables](docs/phase-00-discovery/Business_Events_Tables.xlsx) | Sample data per event, with fact types |
+| [Sprint 1: architecture](docs/phase-01-infrastructure/Sprint1_Documentation.pdf) | Target architecture, tooling decisions, definition of done |
 | [Design document](docs/phase-01-infrastructure/DESIGN.md) | Scope, architecture, and rationale for Phase 1 |
 | [Phase 1 overview](docs/phase-01-infrastructure/README.md) | What Phase 1 delivers and how it is validated |
 | [Release notes v0.1.0](docs/phase-01-infrastructure/RELEASE_NOTES_v0.1.0.md) | Exact scope and outcomes of the release |
