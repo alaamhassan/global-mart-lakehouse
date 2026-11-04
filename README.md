@@ -335,16 +335,22 @@ flowchart LR
 
 <table>
   <tr>
-    <td align="center"><a href="docs/phase-00-discovery/BEAM_Workshop_Canvas.pdf"><img src="docs/images/previews/beam-canvas-1.png" width="420" alt="BEAM canvas for Sales Transactions"></a><br><sub>BEAM* canvas: Sales Transactions</sub></td>
-    <td align="center"><a href="docs/phase-00-discovery/Sprint0_Documentation.pdf"><img src="docs/images/previews/conceptual-model-12.png" width="420" alt="Conceptual model with conformed dimensions"></a><br><sub>Conceptual model with conformed dimensions</sub></td>
+    <td align="center"><a href="docs/phase-00-discovery/BEAM_Workshop_Canvas.pdf"><img src="docs/images/previews-norm/beam-canvas-1.png" width="420" alt="BEAM canvas for Sales Transactions"></a><br><sub>BEAM* canvas: Sales Transactions</sub></td>
+    <td align="center"><a href="docs/phase-00-discovery/Sprint0_Documentation.pdf"><img src="docs/images/previews-norm/conceptual-model-12.png" width="420" alt="Conceptual model with conformed dimensions"></a><br><sub>Conceptual model with conformed dimensions</sub></td>
   </tr>
   <tr>
-    <td align="center"><a href="docs/phase-00-discovery/Sprint0_Documentation.pdf"><img src="docs/images/previews/stakeholders-03.png" width="420" alt="Stakeholder register"></a><br><sub>Stakeholder register</sub></td>
-    <td align="center"><a href="docs/phase-01-infrastructure/Sprint1_Documentation.pdf"><img src="docs/images/previews/architecture-layers-4.png" width="420" alt="Sprint 1 architecture layers"></a><br><sub>Sprint 1: architecture layers</sub></td>
+    <td align="center"><a href="docs/phase-00-discovery/Sprint0_Documentation.pdf"><img src="docs/images/previews-norm/stakeholders-03.png" width="420" alt="Stakeholder register"></a><br><sub>Stakeholder register</sub></td>
+    <td align="center"><a href="docs/phase-01-infrastructure/Sprint1_Documentation.pdf"><img src="docs/images/previews-norm/architecture-layers-4.png" width="420" alt="Sprint 1 architecture layers"></a><br><sub>Sprint 1: architecture layers</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><a href="docs/phase-00-discovery/Business_Events_Tables.xlsx"><img src="docs/images/previews-norm/event-tables-sales-transaction.png" width="860" alt="Example data table for the Sales Transaction event"></a><br><sub>Example data for the Sales Transaction event: tagged columns and edge cases (typical, different, repeat, missing, new/high)</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><a href="docs/phase-00-discovery/Business_Events_Tables.xlsx"><img src="docs/images/previews-norm/event-dimension-matrix.png" width="860" alt="Event by dimension matrix"></a><br><sub>Event-by-dimension matrix: shared dimensions across the six events</sub></td>
   </tr>
 </table>
 
-<sub>Click any preview to open the full PDF.</sub>
+<sub>Click any preview to open the full document.</sub>
 
 ### Sprint 0: Discovery
 
@@ -363,9 +369,10 @@ flowchart LR
 
 ### BEAM\* workshop outputs
 
-- **Six BEAM\* canvases**, one per business event, filled in by the standard canvas sections (When, How, Who, How Many, Where, What, Why).
+- **Six BEAM\* canvases**, one per business event, filled in by the standard canvas sections (When, How, Who, How Many, Where, What, Why). Each measure is classified as fully additive, semi-additive, or non-additive.
 - **7Ws documentation sheets** with an initial data example for each event and its planned future use (for example predictive sales analysis, market basket analysis, customer sentiment analysis).
-- **Example data tables** in a spreadsheet, with each measure classified as fully additive, semi-additive, or non-additive, which feeds straight into later fact-table design.
+- **Example data tables** (one sheet per event) where every column is tagged as a who, what, when, where, why, or how-many element, with its unit (for example BRL/৳ or retail units). The sample rows deliberately include edge cases (typical, different, repeat, missing, and new/high-value) to expose data quality rules early.
+- **Event-by-dimension matrix:** which dimensions each event uses, with counts per dimension. It shows where dimensions are shared across events (the conformed dimensions) and gives each event a priority sequence.
 
 ### Sprint 1: Architecture and tooling
 
@@ -381,7 +388,7 @@ flowchart LR
 | [Sprint 0: discovery](docs/phase-00-discovery/Sprint0_Documentation.pdf) | Stakeholders, business events, conceptual model, data source assessment |
 | [BEAM* canvases](docs/phase-00-discovery/BEAM_Workshop_Canvas.pdf) | One canvas per business event |
 | [Business events (7Ws)](docs/phase-00-discovery/Business_Events_Documentation.pdf) | 7Ws documentation for each event |
-| [Event example tables](docs/phase-00-discovery/Business_Events_Tables.xlsx) | Sample data per event, with fact types |
+| [Event example tables](docs/phase-00-discovery/Business_Events_Tables.xlsx) | Example data per event with BEAM* dimension tags and edge cases, plus the event-by-dimension matrix |
 | [Sprint 1: architecture](docs/phase-01-infrastructure/Sprint1_Documentation.pdf) | Target architecture, tooling decisions, definition of done |
 | [Design document](docs/phase-01-infrastructure/DESIGN.md) | Scope, architecture, and rationale for Phase 1 |
 | [Phase 1 overview](docs/phase-01-infrastructure/README.md) | What Phase 1 delivers and how it is validated |
